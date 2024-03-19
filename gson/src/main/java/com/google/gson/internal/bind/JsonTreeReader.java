@@ -380,7 +380,7 @@ public final class JsonTreeReader extends JsonReader {
     return getPath(true);
   }
 
-  private String locationString() {
+  public String locationString() {
     return " at path " + getPath();
   }
 }

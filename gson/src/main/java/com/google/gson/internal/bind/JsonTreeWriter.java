@@ -73,7 +73,7 @@ public final class JsonTreeWriter extends JsonWriter {
     return product;
   }
 
-  private JsonElement peek() {
+  public JsonElement peek() {
     return stack.get(stack.size() - 1);
   }
 
