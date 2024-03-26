@@ -109,15 +109,6 @@ public final class TreeTypeAdapter<T> extends SerializationDelegatingTypeAdapter
     Streams.write(tree, out);
   }
 
-  private TypeAdapter<T> delegate() {
-    // A race might lead to `delegate` being assigned by multiple threads but the last assignment
-    // will stick
-    TypeAdapter<T> d = delegate;
-    return d != null
-        ? d
-        : (delegate = gson.getDelegateAdapter(skipPastForGetDelegateAdapter, typeToken));
-  }
-
   /**
    * Returns the type adapter which is used for serialization. Returns {@code this} if this {@code
    * TreeTypeAdapter} has a {@link #serializer}; otherwise returns the delegate.
@@ -147,6 +138,15 @@ public final class TreeTypeAdapter<T> extends SerializationDelegatingTypeAdapter
   public static TypeAdapterFactory newTypeHierarchyFactory(
       Class<?> hierarchyType, Object typeAdapter) {
     return new SingleTypeFactory(typeAdapter, null, false, hierarchyType);
+  }
+
+  private TypeAdapter<T> delegate() {
+    // A race might lead to `delegate` being assigned by multiple threads but the last assignment
+    // will stick
+    TypeAdapter<T> d = delegate;
+    return d != null
+        ? d
+        : (delegate = gson.getDelegateAdapter(skipPastForGetDelegateAdapter, typeToken));
   }
 
   private static final class SingleTypeFactory implements TypeAdapterFactory {

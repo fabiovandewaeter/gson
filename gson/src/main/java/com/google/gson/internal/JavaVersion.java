@@ -26,11 +26,6 @@ public final class JavaVersion {
   private static final int MAJOR_JAVA_VERSION = determineMajorJavaVersion();
   private static final int MIN_JAVA_VERSION = 9;
 
-  private static int determineMajorJavaVersion() {
-    String javaVersion = System.getProperty("java.version");
-    return parseMajorJavaVersion(javaVersion);
-  }
-
   // Visible for testing only
   static int parseMajorJavaVersion(String javaVersion) {
     int version = parseDotted(javaVersion);
@@ -41,6 +36,30 @@ public final class JavaVersion {
       return 6; // Choose minimum supported JDK version as default
     }
     return version;
+  }
+
+  /**
+   * Gets the major Java version
+   *
+   * @return the major Java version, i.e. '8' for Java 1.8, '9' for Java 9 etc.
+   */
+  public static int getMajorJavaVersion() {
+    return MAJOR_JAVA_VERSION;
+  }
+
+  /**
+   * Gets a boolean value depending if the application is running on Java 9 or later
+   *
+   * @return {@code true} if the application is running on Java 9 or later; and {@code false}
+   *     otherwise.
+   */
+  public static boolean isJava9OrLater() {
+    return MAJOR_JAVA_VERSION >= MIN_JAVA_VERSION;
+  }
+
+  private static int determineMajorJavaVersion() {
+    String javaVersion = System.getProperty("java.version");
+    return parseMajorJavaVersion(javaVersion);
   }
 
   // Parses both legacy 1.8 style and newer 9.0.4 style
@@ -73,25 +92,6 @@ public final class JavaVersion {
     } catch (NumberFormatException e) {
       return -1;
     }
-  }
-
-  /**
-   * Gets the major Java version
-   *
-   * @return the major Java version, i.e. '8' for Java 1.8, '9' for Java 9 etc.
-   */
-  public static int getMajorJavaVersion() {
-    return MAJOR_JAVA_VERSION;
-  }
-
-  /**
-   * Gets a boolean value depending if the application is running on Java 9 or later
-   *
-   * @return {@code true} if the application is running on Java 9 or later; and {@code false}
-   *     otherwise.
-   */
-  public static boolean isJava9OrLater() {
-    return MAJOR_JAVA_VERSION >= MIN_JAVA_VERSION;
   }
 
   private JavaVersion() {}

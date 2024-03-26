@@ -229,14 +229,6 @@ public final class JsonArray extends JsonElement implements Iterable<JsonElement
     return elements.get(i);
   }
 
-  private JsonElement getAsSingleElement() {
-    int size = elements.size();
-    if (size == 1) {
-      return elements.get(0);
-    }
-    throw new IllegalStateException("Array must have size 1, but has size " + size);
-  }
-
   /**
    * Convenience method to get this array as a {@link Number} if it contains a single element. This
    * method calls {@link JsonElement#getAsNumber()} on the element, therefore any of the exceptions
@@ -429,5 +421,13 @@ public final class JsonArray extends JsonElement implements Iterable<JsonElement
   @Override
   public int hashCode() {
     return elements.hashCode();
+  }
+
+  private JsonElement getAsSingleElement() {
+    int size = elements.size();
+    if (size == 1) {
+      return elements.get(0);
+    }
+    throw new IllegalStateException("Array must have size 1, but has size " + size);
   }
 }
