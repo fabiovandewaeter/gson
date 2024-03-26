@@ -64,6 +64,11 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 
 /** Type adapters for basic types. */
 public final class TypeAdapters {
+  private static final int MAX_UNSIGNED_CHAR_VALUE = 255;
+  private static final int MAX_SHORT_VALUE = 65535;
+  private static final int TRUE = 1;
+  private static final int FALSE = 0;
+
   private TypeAdapters() {
     throw new UnsupportedOperationException();
   }
@@ -139,7 +144,7 @@ public final class TypeAdapters {
         public void write(JsonWriter out, BitSet src) throws IOException {
           out.beginArray();
           for (int i = 0, length = src.length(); i < length; i++) {
-            int value = src.get(i) ? 1 : 0;
+            int value = src.get(i) ? TRUE : FALSE;
             out.value(value);
           }
           out.endArray();
@@ -207,8 +212,7 @@ public final class TypeAdapters {
           } catch (NumberFormatException e) {
             throw new JsonSyntaxException(e);
           }
-          // Allow up to 255 to support unsigned values
-          if (intValue > 255 || intValue < Byte.MIN_VALUE) {
+          if (intValue > MAX_UNSIGNED_CHAR_VALUE || intValue < Byte.MIN_VALUE) {
             throw new JsonSyntaxException(
                 "Lossy conversion from " + intValue + " to byte; at path " + in.getPreviousPath());
           }
@@ -242,8 +246,7 @@ public final class TypeAdapters {
           } catch (NumberFormatException e) {
             throw new JsonSyntaxException(e);
           }
-          // Allow up to 65535 to support unsigned values
-          if (intValue > 65535 || intValue < Short.MIN_VALUE) {
+          if (intValue > MAX_SHORT_VALUE || intValue < Short.MIN_VALUE) {
             throw new JsonSyntaxException(
                 "Lossy conversion from " + intValue + " to short; at path " + in.getPreviousPath());
           }

@@ -209,6 +209,8 @@ import java.util.Objects;
  * @since 1.6
  */
 public class JsonReader implements Closeable {
+  private static final int MAX_STRING_BUILDER_LENGHT = 16;
+
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
 
   private static final int PEEKED_NONE = 0;
@@ -1088,7 +1090,7 @@ public class JsonReader implements Closeable {
           int len = p - start - 1;
           if (builder == null) {
             int estimatedLength = (len + 1) * 2;
-            builder = new StringBuilder(Math.max(estimatedLength, 16));
+            builder = new StringBuilder(Math.max(estimatedLength, MAX_STRING_BUILDER_LENGHT));
           }
           builder.append(buffer, start, len);
           builder.append(readEscapeCharacter());
@@ -1103,7 +1105,7 @@ public class JsonReader implements Closeable {
 
       if (builder == null) {
         int estimatedLength = (p - start) * 2;
-        builder = new StringBuilder(Math.max(estimatedLength, 16));
+        builder = new StringBuilder(Math.max(estimatedLength, MAX_STRING_BUILDER_LENGHT));
       }
       builder.append(buffer, start, p - start);
       pos = p;
@@ -1157,7 +1159,7 @@ public class JsonReader implements Closeable {
 
       // use a StringBuilder when the value is too long. This is too long to be a number!
       if (builder == null) {
-        builder = new StringBuilder(Math.max(i, 16));
+        builder = new StringBuilder(Math.max(i, MAX_STRING_BUILDER_LENGHT));
       }
       builder.append(buffer, pos, i);
       pos += i;

@@ -161,6 +161,7 @@ import java.util.regex.Pattern;
  * @since 1.6
  */
 public class JsonWriter implements Closeable, Flushable {
+  private static final int MAX_SIGNED_CHAR_VALUE = 128;
 
   // Syntax as defined by https://datatracker.ietf.org/doc/html/rfc8259#section-6
   private static final Pattern VALID_JSON_NUMBER_PATTERN =
@@ -741,7 +742,7 @@ public class JsonWriter implements Closeable, Flushable {
     for (int i = 0; i < length; i++) {
       char c = value.charAt(i);
       String replacement;
-      if (c < 128) {
+      if (c < MAX_SIGNED_CHAR_VALUE) {
         replacement = replacements[c];
         if (replacement == null) {
           continue;

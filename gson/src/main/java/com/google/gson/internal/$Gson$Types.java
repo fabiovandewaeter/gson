@@ -44,6 +44,7 @@ import java.util.Properties;
  */
 public final class $Gson$Types {
   static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
+  private static final int HASH_VALUE_ADDED = 31;
 
   private $Gson$Types() {
     throw new UnsupportedOperationException();
@@ -668,7 +669,8 @@ public final class $Gson$Types {
     @Override
     public int hashCode() {
       // this equals Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds());
-      return (lowerBound != null ? 31 + lowerBound.hashCode() : 1) ^ (31 + upperBound.hashCode());
+      return (lowerBound != null ? HASH_VALUE_ADDED + lowerBound.hashCode() : 1)
+          ^ (HASH_VALUE_ADDED + upperBound.hashCode());
     }
 
     @Override

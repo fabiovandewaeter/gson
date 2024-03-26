@@ -23,7 +23,7 @@ public class NumberLimits {
     BigDecimal decimal = new BigDecimal(s);
 
     // Cast to long to avoid issues with abs when value is Integer.MIN_VALUE
-    if (Math.abs((long) decimal.scale()) >= 10_000) {
+    if (Math.abs((long) decimal.scale()) >= MAX_NUMBER_STRING_LENGTH) {
       throw new NumberFormatException("Number has unsupported scale: " + s);
     }
     return decimal;

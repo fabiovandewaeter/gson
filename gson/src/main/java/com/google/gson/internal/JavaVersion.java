@@ -24,6 +24,7 @@ public final class JavaVersion {
   // version string
 
   private static final int MAJOR_JAVA_VERSION = determineMajorJavaVersion();
+  private static final int MIN_JAVA_VERSION = 9;
 
   private static int determineMajorJavaVersion() {
     String javaVersion = System.getProperty("java.version");
@@ -90,7 +91,7 @@ public final class JavaVersion {
    *     otherwise.
    */
   public static boolean isJava9OrLater() {
-    return MAJOR_JAVA_VERSION >= 9;
+    return MAJOR_JAVA_VERSION >= MIN_JAVA_VERSION;
   }
 
   private JavaVersion() {}
