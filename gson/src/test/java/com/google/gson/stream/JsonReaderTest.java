@@ -41,22 +41,6 @@ import org.junit.Test;
 @SuppressWarnings("resource")
 public final class JsonReaderTest {
 
-  @SuppressWarnings("deprecation") // for JsonReader.setLenient
-  @Test
-  public void testSetLenientTrue() {
-    JsonReader reader = new JsonReader(reader("{}"));
-    reader.setLenient(true);
-    assertThat(reader.getStrictness()).isEqualTo(Strictness.LENIENT);
-  }
-
-  @SuppressWarnings("deprecation") // for JsonReader.setLenient
-  @Test
-  public void testSetLenientFalse() {
-    JsonReader reader = new JsonReader(reader("{}"));
-    reader.setLenient(false);
-    assertThat(reader.getStrictness()).isEqualTo(Strictness.LEGACY_STRICT);
-  }
-
   @Test
   public void testSetStrictness() {
     JsonReader reader = new JsonReader(reader("{}"));

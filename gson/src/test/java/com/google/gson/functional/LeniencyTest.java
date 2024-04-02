@@ -20,6 +20,7 @@ import static java.util.Collections.singletonList;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.Strictness;
 import com.google.gson.reflect.TypeToken;
 import java.util.List;
 import org.junit.Before;
@@ -30,10 +31,9 @@ public class LeniencyTest {
 
   private Gson gson;
 
-  @SuppressWarnings({"deprecation", "InlineMeInliner"}) // for GsonBuilder.setLenient
   @Before
   public void setUp() throws Exception {
-    gson = new GsonBuilder().setLenient().create();
+    gson = new GsonBuilder().setStrictness(Strictness.LENIENT).create();
   }
 
   @Test

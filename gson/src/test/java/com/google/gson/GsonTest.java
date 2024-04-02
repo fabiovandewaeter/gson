@@ -425,7 +425,6 @@ public final class GsonTest {
     assertThat(writer.toString()).isEqualTo("{\"\\u003ctest2\":true}");
   }
 
-  @SuppressWarnings({"deprecation", "InlineMeInliner"}) // for GsonBuilder.setLenient
   @Test
   public void testNewJsonWriter_Custom() throws IOException {
     StringWriter writer = new StringWriter();
@@ -435,7 +434,7 @@ public final class GsonTest {
             .generateNonExecutableJson()
             .setPrettyPrinting()
             .serializeNulls()
-            .setLenient()
+            .setStrictness(Strictness.LENIENT)
             .create()
             .newJsonWriter(writer);
     jsonWriter.beginObject();
@@ -460,12 +459,14 @@ public final class GsonTest {
     jsonReader.close();
   }
 
-  @SuppressWarnings({"deprecation", "InlineMeInliner"}) // for GsonBuilder.setLenient
   @Test
   public void testNewJsonReader_Custom() throws IOException {
     String json = "test"; // String without quotes
     JsonReader jsonReader =
-        new GsonBuilder().setLenient().create().newJsonReader(new StringReader(json));
+        new GsonBuilder()
+            .setStrictness(Strictness.LENIENT)
+            .create()
+            .newJsonReader(new StringReader(json));
     assertThat(jsonReader.nextString()).isEqualTo("test");
     jsonReader.close();
   }

@@ -251,11 +251,10 @@ public class GsonBuilderTest {
         .isEqualTo(Strictness.LEGACY_STRICT);
   }
 
-  @SuppressWarnings({"deprecation", "InlineMeInliner"}) // for GsonBuilder.setLenient
   @Test
   public void testSetLenient() throws IOException {
     GsonBuilder builder = new GsonBuilder();
-    builder.setLenient();
+    builder.setStrictness(Strictness.LENIENT);
     Gson gson = builder.create();
     assertThat(gson.newJsonReader(new StringReader("{}")).getStrictness())
         .isEqualTo(Strictness.LENIENT);

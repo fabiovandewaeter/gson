@@ -323,7 +323,6 @@ public final class JsonTreeWriterTest {
   public void testOverrides() {
     List<String> ignoredMethods =
         Arrays.asList(
-            "setLenient(boolean)",
             "isLenient()",
             "setStrictness(com.google.gson.Strictness)",
             "getStrictness()",

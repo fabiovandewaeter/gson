@@ -151,10 +151,7 @@ public class JsonTreeReaderTest {
   public void testOverrides() {
     List<String> ignoredMethods =
         Arrays.asList(
-            "setLenient(boolean)",
-            "isLenient()",
-            "setStrictness(com.google.gson.Strictness)",
-            "getStrictness()");
+            "isLenient()", "setStrictness(com.google.gson.Strictness)", "getStrictness()");
     MoreAsserts.assertOverridesMethods(JsonReader.class, JsonTreeReader.class, ignoredMethods);
   }
 }

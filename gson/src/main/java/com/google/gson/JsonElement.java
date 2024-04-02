@@ -268,11 +268,8 @@ public abstract class JsonElement {
    * @throws IllegalStateException if this element is of the type {@link JsonArray} but contains
    *     more than a single element.
    * @since 1.3
-   * @deprecated This method is misleading, as it does not get this element as a char but rather as
-   *     a string's first character.
    */
-  @Deprecated
-  public char getAsCharacter() {
+  public char getFirstCharacter() {
     throw new UnsupportedOperationException(getClass().getSimpleName());
   }
 

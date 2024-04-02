@@ -120,12 +120,12 @@ public class JsonPrimitiveTest {
   public void testStringsAndChar() {
     JsonPrimitive json = new JsonPrimitive("abc");
     assertThat(json.isString()).isTrue();
-    assertThat(json.getAsCharacter()).isEqualTo('a');
+    assertThat(json.getFirstCharacter()).isEqualTo('a');
     assertThat(json.getAsString()).isEqualTo("abc");
 
     json = new JsonPrimitive('z');
     assertThat(json.isString()).isTrue();
-    assertThat(json.getAsCharacter()).isEqualTo('z');
+    assertThat(json.getFirstCharacter()).isEqualTo('z');
     assertThat(json.getAsString()).isEqualTo("z");
 
     json = new JsonPrimitive(true);
@@ -134,7 +134,7 @@ public class JsonPrimitiveTest {
     json = new JsonPrimitive("");
     assertThat(json.getAsString()).isEqualTo("");
     try {
-      json.getAsCharacter();
+      json.getFirstCharacter();
       fail();
     } catch (UnsupportedOperationException e) {
       assertThat(e).hasMessageThat().isEqualTo("String value is empty");

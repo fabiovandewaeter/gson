@@ -315,27 +315,6 @@ public class JsonReader implements Closeable {
   }
 
   /**
-   * Sets the strictness of this reader.
-   *
-   * @deprecated Please use {@link #setStrictness(Strictness)} instead. {@code
-   *     JsonReader.setLenient(true)} should be replaced by {@code
-   *     JsonReader.setStrictness(Strictness.LENIENT)} and {@code JsonReader.setLenient(false)}
-   *     should be replaced by {@code JsonReader.setStrictness(Strictness.LEGACY_STRICT)}.<br>
-   *     However, if you used {@code setLenient(false)} before, you might prefer {@link
-   *     Strictness#STRICT} now instead.
-   * @param lenient whether this reader should be lenient. If true, the strictness is set to {@link
-   *     Strictness#LENIENT}. If false, the strictness is set to {@link Strictness#LEGACY_STRICT}.
-   * @see #setStrictness(Strictness)
-   */
-  @Deprecated
-  // Don't specify @InlineMe, so caller with `setLenient(false)` becomes aware of new
-  // Strictness.STRICT
-  @SuppressWarnings("InlineMeSuggester")
-  public final void setLenient(boolean lenient) {
-    setStrictness(lenient ? Strictness.LENIENT : Strictness.LEGACY_STRICT);
-  }
-
-  /**
    * Returns true if the {@link Strictness} of this reader is equal to {@link Strictness#LENIENT}.
    *
    * @see #setStrictness(Strictness)

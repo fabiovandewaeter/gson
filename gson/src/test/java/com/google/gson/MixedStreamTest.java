@@ -80,23 +80,21 @@ public final class MixedStreamTest {
     jsonReader.endArray();
   }
 
-  @SuppressWarnings("deprecation") // for JsonReader.setLenient
   @Test
   public void testReaderDoesNotMutateState() throws IOException {
     Gson gson = new Gson();
     JsonReader jsonReader = new JsonReader(new StringReader(CARS_JSON));
     jsonReader.beginArray();
 
-    jsonReader.setLenient(false);
+    jsonReader.setStrictness(Strictness.STRICT);
     Car unused1 = gson.fromJson(jsonReader, Car.class);
     assertThat(jsonReader.isLenient()).isFalse();
 
-    jsonReader.setLenient(true);
+    jsonReader.setStrictness(Strictness.LENIENT);
     Car unused2 = gson.fromJson(jsonReader, Car.class);
     assertThat(jsonReader.isLenient()).isTrue();
   }
 
-  @SuppressWarnings("deprecation") // for JsonWriter.setLenient
   @Test
   public void testWriteDoesNotMutateState() throws IOException {
     Gson gson = new Gson();
@@ -104,13 +102,13 @@ public final class MixedStreamTest {
     jsonWriter.beginArray();
 
     jsonWriter.setHtmlSafe(true);
-    jsonWriter.setLenient(true);
+    jsonWriter.setStrictness(Strictness.LENIENT);
     gson.toJson(BLUE_MUSTANG, Car.class, jsonWriter);
     assertThat(jsonWriter.isHtmlSafe()).isTrue();
     assertThat(jsonWriter.isLenient()).isTrue();
 
     jsonWriter.setHtmlSafe(false);
-    jsonWriter.setLenient(false);
+    jsonWriter.setStrictness(Strictness.STRICT);
     gson.toJson(BLUE_MUSTANG, Car.class, jsonWriter);
     assertThat(jsonWriter.isHtmlSafe()).isFalse();
     assertThat(jsonWriter.isLenient()).isFalse();

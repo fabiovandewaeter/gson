@@ -127,8 +127,7 @@ public class JsonObjectTest {
     assertThat(jsonElement).isNotNull();
     assertThat(jsonElement.getAsString()).isEqualTo(String.valueOf(value));
 
-    @SuppressWarnings("deprecation")
-    char character = jsonElement.getAsCharacter();
+    char character = jsonElement.getFirstCharacter();
     assertThat(character).isEqualTo(value);
   }
 

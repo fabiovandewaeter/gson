@@ -40,26 +40,6 @@ public final class JsonWriterTest {
     jsonWriter.close();
   }
 
-  @SuppressWarnings("deprecation") // for JsonWriter.setLenient
-  @Test
-  public void testSetLenientTrue() throws IOException {
-    JsonWriter jsonWriter = new JsonWriter(new StringWriter());
-    jsonWriter.setLenient(true);
-    assertThat(jsonWriter.getStrictness()).isEqualTo(Strictness.LENIENT);
-    jsonWriter.value(false);
-    jsonWriter.close();
-  }
-
-  @SuppressWarnings("deprecation") // for JsonWriter.setLenient
-  @Test
-  public void testSetLenientFalse() throws IOException {
-    JsonWriter jsonWriter = new JsonWriter(new StringWriter());
-    jsonWriter.setLenient(false);
-    assertThat(jsonWriter.getStrictness()).isEqualTo(Strictness.LEGACY_STRICT);
-    jsonWriter.value(false);
-    jsonWriter.close();
-  }
-
   @Test
   public void testSetStrictness() throws IOException {
     JsonWriter jsonWriter = new JsonWriter(new StringWriter());

@@ -239,12 +239,9 @@ public final class JsonPrimitive extends JsonElement {
 
   /**
    * @throws UnsupportedOperationException if the string value of this primitive is empty.
-   * @deprecated This method is misleading, as it does not get this element as a char but rather as
-   *     a string's first character.
    */
-  @Deprecated
   @Override
-  public char getAsCharacter() {
+  public char getFirstCharacter() {
     String s = getAsString();
     if (s.isEmpty()) {
       throw new UnsupportedOperationException("String value is empty");
