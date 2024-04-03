@@ -87,11 +87,11 @@ public final class MixedStreamTest {
     jsonReader.beginArray();
 
     jsonReader.setStrictness(Strictness.STRICT);
-    Car unused1 = gson.fromJson(jsonReader, Car.class);
+    gson.fromJson(jsonReader, Car.class);
     assertThat(jsonReader.isLenient()).isFalse();
 
     jsonReader.setStrictness(Strictness.LENIENT);
-    Car unused2 = gson.fromJson(jsonReader, Car.class);
+    gson.fromJson(jsonReader, Car.class);
     assertThat(jsonReader.isLenient()).isTrue();
   }
 
