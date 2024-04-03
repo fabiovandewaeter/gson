@@ -209,6 +209,7 @@ import java.util.Objects;
  * @since 1.6
  */
 public class JsonReader implements Closeable {
+  private static final String NON_LITERAL_CHARACTERS = "/\\;#={}[]:, \t\f\r\n";
   private static final int MAX_STRING_BUILDER_LENGHT = 16;
 
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
@@ -808,30 +809,14 @@ public class JsonReader implements Closeable {
     }
   }
 
-  @SuppressWarnings("fallthrough")
   private boolean isLiteral(char c) throws IOException {
-    switch (c) {
-      case '/':
-      case '\\':
-      case ';':
-      case '#':
-      case '=':
-        checkLenient(); // fall-through
-      case '{':
-      case '}':
-      case '[':
-      case ']':
-      case ':':
-      case ',':
-      case ' ':
-      case '\t':
-      case '\f':
-      case '\r':
-      case '\n':
-        return false;
-      default:
-        return true;
+    int indexOfChar = NON_LITERAL_CHARACTERS.indexOf(c);
+    if (indexOfChar == -1) {
+      return true;
+    } else if (indexOfChar < 5) {
+      checkLenient();
     }
+    return false;
   }
 
   /**
