@@ -16,7 +16,7 @@
 
 package com.google.gson.internal;
 
-import static com.google.gson.internal.$Gson$Preconditions.checkArgument;
+import static com.google.gson.internal.GsonPreconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
@@ -42,11 +42,11 @@ import java.util.Properties;
  * @author Bob Lee
  * @author Jesse Wilson
  */
-public final class $Gson$Types {
+public final class GsonTypes {
   static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
   private static final int HASH_VALUE_ADDED = 31;
 
-  private $Gson$Types() {
+  private GsonTypes() {
     throw new UnsupportedOperationException();
   }
 
@@ -288,9 +288,7 @@ public final class $Gson$Types {
     }
     checkArgument(supertype.isAssignableFrom(contextRawType));
     return resolve(
-        context,
-        contextRawType,
-        $Gson$Types.getGenericSupertype(context, contextRawType, supertype));
+        context, contextRawType, GsonTypes.getGenericSupertype(context, contextRawType, supertype));
   }
 
   /**
@@ -554,7 +552,7 @@ public final class $Gson$Types {
     @Override
     public boolean equals(Object other) {
       return other instanceof ParameterizedType
-          && $Gson$Types.equals(this, (ParameterizedType) other);
+          && GsonTypes.equals(this, (ParameterizedType) other);
     }
 
     private static int hashCodeOrZero(Object o) {
@@ -603,7 +601,7 @@ public final class $Gson$Types {
 
     @Override
     public boolean equals(Object o) {
-      return o instanceof GenericArrayType && $Gson$Types.equals(this, (GenericArrayType) o);
+      return o instanceof GenericArrayType && GsonTypes.equals(this, (GenericArrayType) o);
     }
 
     @Override
@@ -663,7 +661,7 @@ public final class $Gson$Types {
 
     @Override
     public boolean equals(Object other) {
-      return other instanceof WildcardType && $Gson$Types.equals(this, (WildcardType) other);
+      return other instanceof WildcardType && GsonTypes.equals(this, (WildcardType) other);
     }
 
     @Override

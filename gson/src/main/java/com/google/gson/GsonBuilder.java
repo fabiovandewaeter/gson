@@ -31,8 +31,8 @@ import static com.google.gson.Gson.DEFAULT_USE_JDK_UNSAFE;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.gson.annotations.Since;
 import com.google.gson.annotations.Until;
-import com.google.gson.internal.$Gson$Preconditions;
 import com.google.gson.internal.Excluder;
+import com.google.gson.internal.GsonPreconditions;
 import com.google.gson.internal.bind.DefaultDateTypeAdapter;
 import com.google.gson.internal.bind.TreeTypeAdapter;
 import com.google.gson.internal.bind.TypeAdapters;
@@ -676,7 +676,7 @@ public final class GsonBuilder {
   @CanIgnoreReturnValue
   public GsonBuilder registerTypeAdapter(Type type, Object typeAdapter) {
     Objects.requireNonNull(type);
-    $Gson$Preconditions.checkArgument(
+    GsonPreconditions.checkArgument(
         typeAdapter instanceof JsonSerializer<?>
             || typeAdapter instanceof JsonDeserializer<?>
             || typeAdapter instanceof InstanceCreator<?>
@@ -745,7 +745,7 @@ public final class GsonBuilder {
   @CanIgnoreReturnValue
   public GsonBuilder registerTypeHierarchyAdapter(Class<?> baseType, Object typeAdapter) {
     Objects.requireNonNull(baseType);
-    $Gson$Preconditions.checkArgument(
+    GsonPreconditions.checkArgument(
         typeAdapter instanceof JsonSerializer<?>
             || typeAdapter instanceof JsonDeserializer<?>
             || typeAdapter instanceof TypeAdapter<?>);
