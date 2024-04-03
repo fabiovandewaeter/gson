@@ -1080,35 +1080,14 @@ public class JsonReader implements Closeable {
   }
 
   /** Returns an unquoted value as a string. */
-  @SuppressWarnings("fallthrough")
   private String nextUnquotedValue() throws IOException {
     StringBuilder builder = null;
     int i = 0;
 
-    findNonLiteralCharacter:
     while (true) {
       for (; pos + i < limit; i++) {
-        switch (buffer[pos + i]) {
-          case '/':
-          case '\\':
-          case ';':
-          case '#':
-          case '=':
-            checkLenient(); // fall-through
-          case '{':
-          case '}':
-          case '[':
-          case ']':
-          case ':':
-          case ',':
-          case ' ':
-          case '\t':
-          case '\f':
-          case '\r':
-          case '\n':
-            break findNonLiteralCharacter;
-          default:
-            // skip character to be included in string value
+        if (!this.isLiteral(buffer[pos + i])) {
+          break;
         }
       }
 
@@ -1166,35 +1145,16 @@ public class JsonReader implements Closeable {
     throw syntaxError("Unterminated string");
   }
 
-  @SuppressWarnings("fallthrough")
   private void skipUnquotedValue() throws IOException {
     do {
       int i = 0;
+
       for (; pos + i < limit; i++) {
-        switch (buffer[pos + i]) {
-          case '/':
-          case '\\':
-          case ';':
-          case '#':
-          case '=':
-            checkLenient(); // fall-through
-          case '{':
-          case '}':
-          case '[':
-          case ']':
-          case ':':
-          case ',':
-          case ' ':
-          case '\t':
-          case '\f':
-          case '\r':
-          case '\n':
-            pos += i;
-            return;
-          default:
-            // skip the character
+        if (!this.isLiteral(buffer[pos + i])) {
+          break;
         }
       }
+
       pos += i;
     } while (fillBuffer(1));
   }
