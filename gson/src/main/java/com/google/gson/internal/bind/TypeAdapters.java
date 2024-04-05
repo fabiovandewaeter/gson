@@ -29,7 +29,22 @@ import com.google.gson.TypeAdapterFactory;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.internal.LazilyParsedNumber;
 import com.google.gson.internal.NumberLimits;
-import com.google.gson.internal.TroubleshootingGuide;
+import com.google.gson.internal.bind.adapters.AtomicBooleanTypeAdapter;
+import com.google.gson.internal.bind.adapters.AtomicIntegerArrayTypeAdapter;
+import com.google.gson.internal.bind.adapters.AtomicIntegerTypeAdapter;
+import com.google.gson.internal.bind.adapters.BigDecimalTypeAdapter;
+import com.google.gson.internal.bind.adapters.BitSetTypeAdapter;
+import com.google.gson.internal.bind.adapters.BooleanAsStringTypeAdapter;
+import com.google.gson.internal.bind.adapters.BooleanTypeAdapter;
+import com.google.gson.internal.bind.adapters.ByteTypeAdapter;
+import com.google.gson.internal.bind.adapters.CharacterTypeAdapter;
+import com.google.gson.internal.bind.adapters.ClassTypeAdapter;
+import com.google.gson.internal.bind.adapters.DoubleTypeAdapter;
+import com.google.gson.internal.bind.adapters.FloatAdapterType;
+import com.google.gson.internal.bind.adapters.IntegerTypeAdapter;
+import com.google.gson.internal.bind.adapters.LongTypeAdapter;
+import com.google.gson.internal.bind.adapters.ShortTypeAdapter;
+import com.google.gson.internal.bind.adapters.StringTypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -64,444 +79,53 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 
 /** Type adapters for basic types. */
 public final class TypeAdapters {
-  private static final int MAX_UNSIGNED_CHAR_VALUE = 255;
-  private static final int MAX_SHORT_VALUE = 65535;
-  private static final int TRUE = 1;
-  private static final int FALSE = 0;
 
   private TypeAdapters() {
     throw new UnsupportedOperationException();
   }
 
-  @SuppressWarnings("rawtypes")
-  public static final TypeAdapter<Class> CLASS =
-      new TypeAdapter<Class>() {
-        @Override
-        public void write(JsonWriter out, Class value) throws IOException {
-          throw new UnsupportedOperationException(
-              "Attempted to serialize java.lang.Class: "
-                  + value.getName()
-                  + ". Forgot to register a type adapter?"
-                  + "\nSee "
-                  + TroubleshootingGuide.createUrl("java-lang-class-unsupported"));
-        }
+  public static final TypeAdapterFactory CLASS_FACTORY =
+      newFactory(Class.class, new ClassTypeAdapter().nullSafe());
 
-        @Override
-        public Class read(JsonReader in) throws IOException {
-          throw new UnsupportedOperationException(
-              "Attempted to deserialize a java.lang.Class. Forgot to register a type adapter?"
-                  + "\nSee "
-                  + TroubleshootingGuide.createUrl("java-lang-class-unsupported"));
-        }
-      }.nullSafe();
-
-  public static final TypeAdapterFactory CLASS_FACTORY = newFactory(Class.class, CLASS);
-
-  public static final TypeAdapter<BitSet> BIT_SET =
-      new TypeAdapter<BitSet>() {
-        @Override
-        public BitSet read(JsonReader in) throws IOException {
-          BitSet bitset = new BitSet();
-          in.beginArray();
-          int i = 0;
-          JsonToken tokenType = in.peek();
-          while (tokenType != JsonToken.END_ARRAY) {
-            boolean set;
-            switch (tokenType) {
-              case NUMBER:
-              case STRING:
-                int intValue = in.nextInt();
-                if (intValue == 0) {
-                  set = false;
-                } else if (intValue == 1) {
-                  set = true;
-                } else {
-                  throw new JsonSyntaxException(
-                      "Invalid bitset value "
-                          + intValue
-                          + ", expected 0 or 1; at path "
-                          + in.getPreviousPath());
-                }
-                break;
-              case BOOLEAN:
-                set = in.nextBoolean();
-                break;
-              default:
-                throw new JsonSyntaxException(
-                    "Invalid bitset value type: " + tokenType + "; at path " + in.getPath());
-            }
-            if (set) {
-              bitset.set(i);
-            }
-            ++i;
-            tokenType = in.peek();
-          }
-          in.endArray();
-          return bitset;
-        }
-
-        @Override
-        public void write(JsonWriter out, BitSet src) throws IOException {
-          out.beginArray();
-          for (int i = 0, length = src.length(); i < length; i++) {
-            int value = src.get(i) ? TRUE : FALSE;
-            out.value(value);
-          }
-          out.endArray();
-        }
-      }.nullSafe();
-
-  public static final TypeAdapterFactory BIT_SET_FACTORY = newFactory(BitSet.class, BIT_SET);
-
-  public static final TypeAdapter<Boolean> BOOLEAN =
-      new TypeAdapter<Boolean>() {
-        @Override
-        public Boolean read(JsonReader in) throws IOException {
-          JsonToken peek = in.peek();
-          if (peek == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          } else if (peek == JsonToken.STRING) {
-            // support strings for compatibility with GSON 1.7
-            return Boolean.parseBoolean(in.nextString());
-          }
-          return in.nextBoolean();
-        }
-
-        @Override
-        public void write(JsonWriter out, Boolean value) throws IOException {
-          out.value(value);
-        }
-      };
+  public static final TypeAdapterFactory BIT_SET_FACTORY =
+      newFactory(BitSet.class, new BitSetTypeAdapter().nullSafe());
 
   /**
    * Writes a boolean as a string. Useful for map keys, where booleans aren't otherwise permitted.
    */
-  public static final TypeAdapter<Boolean> BOOLEAN_AS_STRING =
-      new TypeAdapter<Boolean>() {
-        @Override
-        public Boolean read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          return Boolean.valueOf(in.nextString());
-        }
-
-        @Override
-        public void write(JsonWriter out, Boolean value) throws IOException {
-          out.value(value == null ? "null" : value.toString());
-        }
-      };
+  public static final TypeAdapter<Boolean> BOOLEAN_AS_STRING = new BooleanAsStringTypeAdapter();
 
   public static final TypeAdapterFactory BOOLEAN_FACTORY =
-      newFactory(boolean.class, Boolean.class, BOOLEAN);
+      newFactory(boolean.class, Boolean.class, new BooleanTypeAdapter());
 
-  public static final TypeAdapter<Number> BYTE =
-      new TypeAdapter<Number>() {
-        @Override
-        public Number read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-
-          int intValue;
-          try {
-            intValue = in.nextInt();
-          } catch (NumberFormatException e) {
-            throw new JsonSyntaxException(e);
-          }
-          if (intValue > MAX_UNSIGNED_CHAR_VALUE || intValue < Byte.MIN_VALUE) {
-            throw new JsonSyntaxException(
-                "Lossy conversion from " + intValue + " to byte; at path " + in.getPreviousPath());
-          }
-          return (byte) intValue;
-        }
-
-        @Override
-        public void write(JsonWriter out, Number value) throws IOException {
-          if (value == null) {
-            out.nullValue();
-          } else {
-            out.value(value.byteValue());
-          }
-        }
-      };
-
-  public static final TypeAdapterFactory BYTE_FACTORY = newFactory(byte.class, Byte.class, BYTE);
-
-  public static final TypeAdapter<Number> SHORT =
-      new TypeAdapter<Number>() {
-        @Override
-        public Number read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-
-          int intValue;
-          try {
-            intValue = in.nextInt();
-          } catch (NumberFormatException e) {
-            throw new JsonSyntaxException(e);
-          }
-          if (intValue > MAX_SHORT_VALUE || intValue < Short.MIN_VALUE) {
-            throw new JsonSyntaxException(
-                "Lossy conversion from " + intValue + " to short; at path " + in.getPreviousPath());
-          }
-          return (short) intValue;
-        }
-
-        @Override
-        public void write(JsonWriter out, Number value) throws IOException {
-          if (value == null) {
-            out.nullValue();
-          } else {
-            out.value(value.shortValue());
-          }
-        }
-      };
+  public static final TypeAdapterFactory BYTE_FACTORY =
+      newFactory(byte.class, Byte.class, new ByteTypeAdapter());
 
   public static final TypeAdapterFactory SHORT_FACTORY =
-      newFactory(short.class, Short.class, SHORT);
+      newFactory(short.class, Short.class, new ShortTypeAdapter());
 
-  public static final TypeAdapter<Number> INTEGER =
-      new TypeAdapter<Number>() {
-        @Override
-        public Number read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          try {
-            return in.nextInt();
-          } catch (NumberFormatException e) {
-            throw new JsonSyntaxException(e);
-          }
-        }
-
-        @Override
-        public void write(JsonWriter out, Number value) throws IOException {
-          if (value == null) {
-            out.nullValue();
-          } else {
-            out.value(value.intValue());
-          }
-        }
-      };
   public static final TypeAdapterFactory INTEGER_FACTORY =
-      newFactory(int.class, Integer.class, INTEGER);
+      newFactory(int.class, Integer.class, new IntegerTypeAdapter());
 
-  public static final TypeAdapter<AtomicInteger> ATOMIC_INTEGER =
-      new TypeAdapter<AtomicInteger>() {
-        @Override
-        public AtomicInteger read(JsonReader in) throws IOException {
-          try {
-            return new AtomicInteger(in.nextInt());
-          } catch (NumberFormatException e) {
-            throw new JsonSyntaxException(e);
-          }
-        }
-
-        @Override
-        public void write(JsonWriter out, AtomicInteger value) throws IOException {
-          out.value(value.get());
-        }
-      }.nullSafe();
   public static final TypeAdapterFactory ATOMIC_INTEGER_FACTORY =
-      newFactory(AtomicInteger.class, TypeAdapters.ATOMIC_INTEGER);
+      newFactory(AtomicInteger.class, new AtomicIntegerTypeAdapter().nullSafe());
 
-  public static final TypeAdapter<AtomicBoolean> ATOMIC_BOOLEAN =
-      new TypeAdapter<AtomicBoolean>() {
-        @Override
-        public AtomicBoolean read(JsonReader in) throws IOException {
-          return new AtomicBoolean(in.nextBoolean());
-        }
-
-        @Override
-        public void write(JsonWriter out, AtomicBoolean value) throws IOException {
-          out.value(value.get());
-        }
-      }.nullSafe();
   public static final TypeAdapterFactory ATOMIC_BOOLEAN_FACTORY =
-      newFactory(AtomicBoolean.class, TypeAdapters.ATOMIC_BOOLEAN);
+      newFactory(AtomicBoolean.class, new AtomicBooleanTypeAdapter().nullSafe());
 
-  public static final TypeAdapter<AtomicIntegerArray> ATOMIC_INTEGER_ARRAY =
-      new TypeAdapter<AtomicIntegerArray>() {
-        @Override
-        public AtomicIntegerArray read(JsonReader in) throws IOException {
-          List<Integer> list = new ArrayList<>();
-          in.beginArray();
-          while (in.hasNext()) {
-            try {
-              int integer = in.nextInt();
-              list.add(integer);
-            } catch (NumberFormatException e) {
-              throw new JsonSyntaxException(e);
-            }
-          }
-          in.endArray();
-          int length = list.size();
-          AtomicIntegerArray array = new AtomicIntegerArray(length);
-          for (int i = 0; i < length; ++i) {
-            array.set(i, list.get(i));
-          }
-          return array;
-        }
-
-        @Override
-        public void write(JsonWriter out, AtomicIntegerArray value) throws IOException {
-          out.beginArray();
-          for (int i = 0, length = value.length(); i < length; i++) {
-            out.value(value.get(i));
-          }
-          out.endArray();
-        }
-      }.nullSafe();
   public static final TypeAdapterFactory ATOMIC_INTEGER_ARRAY_FACTORY =
-      newFactory(AtomicIntegerArray.class, TypeAdapters.ATOMIC_INTEGER_ARRAY);
+      newFactory(AtomicIntegerArray.class, new AtomicIntegerArrayTypeAdapter().nullSafe());
 
-  public static final TypeAdapter<Number> LONG =
-      new TypeAdapter<Number>() {
-        @Override
-        public Number read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          try {
-            return in.nextLong();
-          } catch (NumberFormatException e) {
-            throw new JsonSyntaxException(e);
-          }
-        }
+  public static final TypeAdapter<Number> LONG = new LongTypeAdapter();
 
-        @Override
-        public void write(JsonWriter out, Number value) throws IOException {
-          if (value == null) {
-            out.nullValue();
-          } else {
-            out.value(value.longValue());
-          }
-        }
-      };
+  public static final TypeAdapter<Number> FLOAT = new FloatAdapterType();
 
-  public static final TypeAdapter<Number> FLOAT =
-      new TypeAdapter<Number>() {
-        @Override
-        public Number read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          return (float) in.nextDouble();
-        }
-
-        @Override
-        public void write(JsonWriter out, Number value) throws IOException {
-          if (value == null) {
-            out.nullValue();
-          } else {
-            // For backward compatibility don't call `JsonWriter.value(float)` because that method
-            // has been newly added and not all custom JsonWriter implementations might override
-            // it yet
-            Number floatNumber = value instanceof Float ? value : value.floatValue();
-            out.value(floatNumber);
-          }
-        }
-      };
-
-  public static final TypeAdapter<Number> DOUBLE =
-      new TypeAdapter<Number>() {
-        @Override
-        public Number read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          return in.nextDouble();
-        }
-
-        @Override
-        public void write(JsonWriter out, Number value) throws IOException {
-          if (value == null) {
-            out.nullValue();
-          } else {
-            out.value(value.doubleValue());
-          }
-        }
-      };
-
-  public static final TypeAdapter<Character> CHARACTER =
-      new TypeAdapter<Character>() {
-        @Override
-        public Character read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          String str = in.nextString();
-          if (str.length() != 1) {
-            throw new JsonSyntaxException(
-                "Expecting character, got: " + str + "; at " + in.getPreviousPath());
-          }
-          return str.charAt(0);
-        }
-
-        @Override
-        public void write(JsonWriter out, Character value) throws IOException {
-          out.value(value == null ? null : String.valueOf(value));
-        }
-      };
+  public static final TypeAdapter<Number> DOUBLE = new DoubleTypeAdapter();
 
   public static final TypeAdapterFactory CHARACTER_FACTORY =
-      newFactory(char.class, Character.class, CHARACTER);
+      newFactory(char.class, Character.class, new CharacterTypeAdapter());
 
-  public static final TypeAdapter<String> STRING =
-      new TypeAdapter<String>() {
-        @Override
-        public String read(JsonReader in) throws IOException {
-          JsonToken peek = in.peek();
-          if (peek == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          /* coerce booleans to strings for backwards compatibility */
-          if (peek == JsonToken.BOOLEAN) {
-            return Boolean.toString(in.nextBoolean());
-          }
-          return in.nextString();
-        }
-
-        @Override
-        public void write(JsonWriter out, String value) throws IOException {
-          out.value(value);
-        }
-      };
-
-  public static final TypeAdapter<BigDecimal> BIG_DECIMAL =
-      new TypeAdapter<BigDecimal>() {
-        @Override
-        public BigDecimal read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          String s = in.nextString();
-          try {
-            return NumberLimits.parseBigDecimal(s);
-          } catch (NumberFormatException e) {
-            throw new JsonSyntaxException(
-                "Failed parsing '" + s + "' as BigDecimal; at path " + in.getPreviousPath(), e);
-          }
-        }
-
-        @Override
-        public void write(JsonWriter out, BigDecimal value) throws IOException {
-          out.value(value);
-        }
-      };
+  public static final TypeAdapter<BigDecimal> BIG_DECIMAL = new BigDecimalTypeAdapter();
 
   public static final TypeAdapter<BigInteger> BIG_INTEGER =
       new TypeAdapter<BigInteger>() {
@@ -546,7 +170,7 @@ public final class TypeAdapters {
         }
       };
 
-  public static final TypeAdapterFactory STRING_FACTORY = newFactory(String.class, STRING);
+  public static final TypeAdapterFactory STRING_FACTORY = newFactory(String.class, new StringTypeAdapter());
 
   public static final TypeAdapter<StringBuilder> STRING_BUILDER =
       new TypeAdapter<StringBuilder>() {
