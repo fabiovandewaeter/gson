@@ -17,34 +17,40 @@
 package com.google.gson.internal.bind;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.internal.LazilyParsedNumber;
-import com.google.gson.internal.NumberLimits;
 import com.google.gson.internal.bind.adapters.AtomicBooleanTypeAdapter;
 import com.google.gson.internal.bind.adapters.AtomicIntegerArrayTypeAdapter;
 import com.google.gson.internal.bind.adapters.AtomicIntegerTypeAdapter;
 import com.google.gson.internal.bind.adapters.BigDecimalTypeAdapter;
+import com.google.gson.internal.bind.adapters.BigIntegerTypeAdapter;
 import com.google.gson.internal.bind.adapters.BitSetTypeAdapter;
 import com.google.gson.internal.bind.adapters.BooleanAsStringTypeAdapter;
 import com.google.gson.internal.bind.adapters.BooleanTypeAdapter;
 import com.google.gson.internal.bind.adapters.ByteTypeAdapter;
+import com.google.gson.internal.bind.adapters.CalendarTypeAdapter;
 import com.google.gson.internal.bind.adapters.CharacterTypeAdapter;
 import com.google.gson.internal.bind.adapters.ClassTypeAdapter;
+import com.google.gson.internal.bind.adapters.CurrencyTypeAdapter;
 import com.google.gson.internal.bind.adapters.DoubleTypeAdapter;
 import com.google.gson.internal.bind.adapters.FloatAdapterType;
+import com.google.gson.internal.bind.adapters.InetAddressTypeAdapter;
 import com.google.gson.internal.bind.adapters.IntegerTypeAdapter;
+import com.google.gson.internal.bind.adapters.JsonElementTypeAdapter;
+import com.google.gson.internal.bind.adapters.LazilyParsedNumberTypeAdapter;
+import com.google.gson.internal.bind.adapters.LocaleTypeAdapter;
 import com.google.gson.internal.bind.adapters.LongTypeAdapter;
 import com.google.gson.internal.bind.adapters.ShortTypeAdapter;
+import com.google.gson.internal.bind.adapters.StringBufferTypeAdapter;
+import com.google.gson.internal.bind.adapters.StringBuilderTypeAdapter;
 import com.google.gson.internal.bind.adapters.StringTypeAdapter;
+import com.google.gson.internal.bind.adapters.URITypeAdapter;
+import com.google.gson.internal.bind.adapters.URLTypeAdapter;
+import com.google.gson.internal.bind.adapters.UUIDTypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -56,22 +62,17 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Currency;
-import java.util.Deque;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -84,499 +85,59 @@ public final class TypeAdapters {
     throw new UnsupportedOperationException();
   }
 
-  public static final TypeAdapterFactory CLASS_FACTORY =
-      newFactory(Class.class, new ClassTypeAdapter().nullSafe());
-
-  public static final TypeAdapterFactory BIT_SET_FACTORY =
-      newFactory(BitSet.class, new BitSetTypeAdapter().nullSafe());
-
   /**
    * Writes a boolean as a string. Useful for map keys, where booleans aren't otherwise permitted.
    */
   public static final TypeAdapter<Boolean> BOOLEAN_AS_STRING = new BooleanAsStringTypeAdapter();
 
+  public static final TypeAdapter<Number> LONG = new LongTypeAdapter();
+  public static final TypeAdapter<Number> FLOAT = new FloatAdapterType();
+  public static final TypeAdapter<Number> DOUBLE = new DoubleTypeAdapter();
+  public static final TypeAdapter<BigDecimal> BIG_DECIMAL = new BigDecimalTypeAdapter();
+  public static final TypeAdapter<BigInteger> BIG_INTEGER = new BigIntegerTypeAdapter();
+  public static final TypeAdapter<LazilyParsedNumber> LAZILY_PARSED_NUMBER =
+      new LazilyParsedNumberTypeAdapter();
+
+  public static final TypeAdapterFactory CLASS_FACTORY =
+      newFactory(Class.class, new ClassTypeAdapter().nullSafe());
+  public static final TypeAdapterFactory BIT_SET_FACTORY =
+      newFactory(BitSet.class, new BitSetTypeAdapter().nullSafe());
   public static final TypeAdapterFactory BOOLEAN_FACTORY =
       newFactory(boolean.class, Boolean.class, new BooleanTypeAdapter());
-
   public static final TypeAdapterFactory BYTE_FACTORY =
       newFactory(byte.class, Byte.class, new ByteTypeAdapter());
-
   public static final TypeAdapterFactory SHORT_FACTORY =
       newFactory(short.class, Short.class, new ShortTypeAdapter());
-
   public static final TypeAdapterFactory INTEGER_FACTORY =
       newFactory(int.class, Integer.class, new IntegerTypeAdapter());
-
   public static final TypeAdapterFactory ATOMIC_INTEGER_FACTORY =
       newFactory(AtomicInteger.class, new AtomicIntegerTypeAdapter().nullSafe());
-
   public static final TypeAdapterFactory ATOMIC_BOOLEAN_FACTORY =
       newFactory(AtomicBoolean.class, new AtomicBooleanTypeAdapter().nullSafe());
-
   public static final TypeAdapterFactory ATOMIC_INTEGER_ARRAY_FACTORY =
       newFactory(AtomicIntegerArray.class, new AtomicIntegerArrayTypeAdapter().nullSafe());
-
-  public static final TypeAdapter<Number> LONG = new LongTypeAdapter();
-
-  public static final TypeAdapter<Number> FLOAT = new FloatAdapterType();
-
-  public static final TypeAdapter<Number> DOUBLE = new DoubleTypeAdapter();
-
   public static final TypeAdapterFactory CHARACTER_FACTORY =
       newFactory(char.class, Character.class, new CharacterTypeAdapter());
-
-  public static final TypeAdapter<BigDecimal> BIG_DECIMAL = new BigDecimalTypeAdapter();
-
-  public static final TypeAdapter<BigInteger> BIG_INTEGER =
-      new TypeAdapter<BigInteger>() {
-        @Override
-        public BigInteger read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          String s = in.nextString();
-          try {
-            return NumberLimits.parseBigInteger(s);
-          } catch (NumberFormatException e) {
-            throw new JsonSyntaxException(
-                "Failed parsing '" + s + "' as BigInteger; at path " + in.getPreviousPath(), e);
-          }
-        }
-
-        @Override
-        public void write(JsonWriter out, BigInteger value) throws IOException {
-          out.value(value);
-        }
-      };
-
-  public static final TypeAdapter<LazilyParsedNumber> LAZILY_PARSED_NUMBER =
-      new TypeAdapter<LazilyParsedNumber>() {
-        // Normally users should not be able to access and deserialize LazilyParsedNumber because
-        // it is an internal type, but implement this nonetheless in case there are legit corner
-        // cases where this is possible
-        @Override
-        public LazilyParsedNumber read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          return new LazilyParsedNumber(in.nextString());
-        }
-
-        @Override
-        public void write(JsonWriter out, LazilyParsedNumber value) throws IOException {
-          out.value(value);
-        }
-      };
-
-  public static final TypeAdapterFactory STRING_FACTORY = newFactory(String.class, new StringTypeAdapter());
-
-  public static final TypeAdapter<StringBuilder> STRING_BUILDER =
-      new TypeAdapter<StringBuilder>() {
-        @Override
-        public StringBuilder read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          return new StringBuilder(in.nextString());
-        }
-
-        @Override
-        public void write(JsonWriter out, StringBuilder value) throws IOException {
-          out.value(value == null ? null : value.toString());
-        }
-      };
-
+  public static final TypeAdapterFactory STRING_FACTORY =
+      newFactory(String.class, new StringTypeAdapter());
   public static final TypeAdapterFactory STRING_BUILDER_FACTORY =
-      newFactory(StringBuilder.class, STRING_BUILDER);
-
-  public static final TypeAdapter<StringBuffer> STRING_BUFFER =
-      new TypeAdapter<StringBuffer>() {
-        @Override
-        public StringBuffer read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          return new StringBuffer(in.nextString());
-        }
-
-        @Override
-        public void write(JsonWriter out, StringBuffer value) throws IOException {
-          out.value(value == null ? null : value.toString());
-        }
-      };
-
+      newFactory(StringBuilder.class, new StringBuilderTypeAdapter());
   public static final TypeAdapterFactory STRING_BUFFER_FACTORY =
-      newFactory(StringBuffer.class, STRING_BUFFER);
-
-  public static final TypeAdapter<URL> URL =
-      new TypeAdapter<URL>() {
-        @Override
-        public URL read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          String nextString = in.nextString();
-          return nextString.equals("null") ? null : new URL(nextString);
-        }
-
-        @Override
-        public void write(JsonWriter out, URL value) throws IOException {
-          out.value(value == null ? null : value.toExternalForm());
-        }
-      };
-
-  public static final TypeAdapterFactory URL_FACTORY = newFactory(URL.class, URL);
-
-  public static final TypeAdapter<URI> URI =
-      new TypeAdapter<URI>() {
-        @Override
-        public URI read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          try {
-            String nextString = in.nextString();
-            return nextString.equals("null") ? null : new URI(nextString);
-          } catch (URISyntaxException e) {
-            throw new JsonIOException(e);
-          }
-        }
-
-        @Override
-        public void write(JsonWriter out, URI value) throws IOException {
-          out.value(value == null ? null : value.toASCIIString());
-        }
-      };
-
-  public static final TypeAdapterFactory URI_FACTORY = newFactory(URI.class, URI);
-
-  public static final TypeAdapter<InetAddress> INET_ADDRESS =
-      new TypeAdapter<InetAddress>() {
-        @Override
-        public InetAddress read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          // regrettably, this should have included both the host name and the host address
-          // For compatibility, we use InetAddress.getByName rather than the possibly-better
-          // .getAllByName
-          @SuppressWarnings("AddressSelection")
-          InetAddress addr = InetAddress.getByName(in.nextString());
-          return addr;
-        }
-
-        @Override
-        public void write(JsonWriter out, InetAddress value) throws IOException {
-          out.value(value == null ? null : value.getHostAddress());
-        }
-      };
-
+      newFactory(StringBuffer.class, new StringBufferTypeAdapter());
+  public static final TypeAdapterFactory URL_FACTORY = newFactory(URL.class, new URLTypeAdapter());
+  public static final TypeAdapterFactory URI_FACTORY = newFactory(URI.class, new URITypeAdapter());
   public static final TypeAdapterFactory INET_ADDRESS_FACTORY =
-      newTypeHierarchyFactory(InetAddress.class, INET_ADDRESS);
-
-  public static final TypeAdapter<UUID> UUID =
-      new TypeAdapter<UUID>() {
-        @Override
-        public UUID read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          String s = in.nextString();
-          try {
-            return java.util.UUID.fromString(s);
-          } catch (IllegalArgumentException e) {
-            throw new JsonSyntaxException(
-                "Failed parsing '" + s + "' as UUID; at path " + in.getPreviousPath(), e);
-          }
-        }
-
-        @Override
-        public void write(JsonWriter out, UUID value) throws IOException {
-          out.value(value == null ? null : value.toString());
-        }
-      };
-
-  public static final TypeAdapterFactory UUID_FACTORY = newFactory(UUID.class, UUID);
-
-  public static final TypeAdapter<Currency> CURRENCY =
-      new TypeAdapter<Currency>() {
-        @Override
-        public Currency read(JsonReader in) throws IOException {
-          String s = in.nextString();
-          try {
-            return Currency.getInstance(s);
-          } catch (IllegalArgumentException e) {
-            throw new JsonSyntaxException(
-                "Failed parsing '" + s + "' as Currency; at path " + in.getPreviousPath(), e);
-          }
-        }
-
-        @Override
-        public void write(JsonWriter out, Currency value) throws IOException {
-          out.value(value.getCurrencyCode());
-        }
-      }.nullSafe();
-  public static final TypeAdapterFactory CURRENCY_FACTORY = newFactory(Currency.class, CURRENCY);
-
-  public static final TypeAdapter<Calendar> CALENDAR =
-      new TypeAdapter<Calendar>() {
-        private static final String YEAR = "year";
-        private static final String MONTH = "month";
-        private static final String DAY_OF_MONTH = "dayOfMonth";
-        private static final String HOUR_OF_DAY = "hourOfDay";
-        private static final String MINUTE = "minute";
-        private static final String SECOND = "second";
-
-        @Override
-        public Calendar read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          in.beginObject();
-          int year = 0;
-          int month = 0;
-          int dayOfMonth = 0;
-          int hourOfDay = 0;
-          int minute = 0;
-          int second = 0;
-          while (in.peek() != JsonToken.END_OBJECT) {
-            String name = in.nextName();
-            int value = in.nextInt();
-            switch (name) {
-              case YEAR:
-                year = value;
-                break;
-              case MONTH:
-                month = value;
-                break;
-              case DAY_OF_MONTH:
-                dayOfMonth = value;
-                break;
-              case HOUR_OF_DAY:
-                hourOfDay = value;
-                break;
-              case MINUTE:
-                minute = value;
-                break;
-              case SECOND:
-                second = value;
-                break;
-              default:
-                // Ignore unknown JSON property
-            }
-          }
-          in.endObject();
-          return new GregorianCalendar(year, month, dayOfMonth, hourOfDay, minute, second);
-        }
-
-        @Override
-        public void write(JsonWriter out, Calendar value) throws IOException {
-          if (value == null) {
-            out.nullValue();
-            return;
-          }
-          out.beginObject();
-          out.name(YEAR);
-          out.value(value.get(Calendar.YEAR));
-          out.name(MONTH);
-          out.value(value.get(Calendar.MONTH));
-          out.name(DAY_OF_MONTH);
-          out.value(value.get(Calendar.DAY_OF_MONTH));
-          out.name(HOUR_OF_DAY);
-          out.value(value.get(Calendar.HOUR_OF_DAY));
-          out.name(MINUTE);
-          out.value(value.get(Calendar.MINUTE));
-          out.name(SECOND);
-          out.value(value.get(Calendar.SECOND));
-          out.endObject();
-        }
-      };
-
+      newTypeHierarchyFactory(InetAddress.class, new InetAddressTypeAdapter());
+  public static final TypeAdapterFactory UUID_FACTORY =
+      newFactory(UUID.class, new UUIDTypeAdapter());
+  public static final TypeAdapterFactory CURRENCY_FACTORY =
+      newFactory(Currency.class, new CurrencyTypeAdapter().nullSafe());
   public static final TypeAdapterFactory CALENDAR_FACTORY =
-      newFactoryForMultipleTypes(Calendar.class, GregorianCalendar.class, CALENDAR);
-
-  public static final TypeAdapter<Locale> LOCALE =
-      new TypeAdapter<Locale>() {
-        @Override
-        public Locale read(JsonReader in) throws IOException {
-          if (in.peek() == JsonToken.NULL) {
-            in.nextNull();
-            return null;
-          }
-          String locale = in.nextString();
-          StringTokenizer tokenizer = new StringTokenizer(locale, "_");
-          String language = null;
-          String country = null;
-          String variant = null;
-          if (tokenizer.hasMoreElements()) {
-            language = tokenizer.nextToken();
-          }
-          if (tokenizer.hasMoreElements()) {
-            country = tokenizer.nextToken();
-          }
-          if (tokenizer.hasMoreElements()) {
-            variant = tokenizer.nextToken();
-          }
-          if (country == null && variant == null) {
-            return new Locale(language);
-          } else if (variant == null) {
-            return new Locale(language, country);
-          } else {
-            return new Locale(language, country, variant);
-          }
-        }
-
-        @Override
-        public void write(JsonWriter out, Locale value) throws IOException {
-          out.value(value == null ? null : value.toString());
-        }
-      };
-
-  public static final TypeAdapterFactory LOCALE_FACTORY = newFactory(Locale.class, LOCALE);
-
-  public static final TypeAdapter<JsonElement> JSON_ELEMENT =
-      new TypeAdapter<JsonElement>() {
-        /**
-         * Tries to begin reading a JSON array or JSON object, returning {@code null} if the next
-         * element is neither of those.
-         */
-        private JsonElement tryBeginNesting(JsonReader in, JsonToken peeked) throws IOException {
-          switch (peeked) {
-            case BEGIN_ARRAY:
-              in.beginArray();
-              return new JsonArray();
-            case BEGIN_OBJECT:
-              in.beginObject();
-              return new JsonObject();
-            default:
-              return null;
-          }
-        }
-
-        /** Reads a {@link JsonElement} which cannot have any nested elements */
-        private JsonElement readTerminal(JsonReader in, JsonToken peeked) throws IOException {
-          switch (peeked) {
-            case STRING:
-              return new JsonPrimitive(in.nextString());
-            case NUMBER:
-              String number = in.nextString();
-              return new JsonPrimitive(new LazilyParsedNumber(number));
-            case BOOLEAN:
-              return new JsonPrimitive(in.nextBoolean());
-            case NULL:
-              in.nextNull();
-              return JsonNull.INSTANCE;
-            default:
-              // When read(JsonReader) is called with JsonReader in invalid state
-              throw new IllegalStateException("Unexpected token: " + peeked);
-          }
-        }
-
-        @Override
-        public JsonElement read(JsonReader in) throws IOException {
-          if (in instanceof JsonTreeReader) {
-            return ((JsonTreeReader) in).nextJsonElement();
-          }
-
-          // Either JsonArray or JsonObject
-          JsonElement current;
-          JsonToken peeked = in.peek();
-
-          current = tryBeginNesting(in, peeked);
-          if (current == null) {
-            return readTerminal(in, peeked);
-          }
-
-          Deque<JsonElement> stack = new ArrayDeque<>();
-
-          while (true) {
-            while (in.hasNext()) {
-              String name = null;
-              // Name is only used for JSON object members
-              if (current instanceof JsonObject) {
-                name = in.nextName();
-              }
-
-              peeked = in.peek();
-              JsonElement value = tryBeginNesting(in, peeked);
-              boolean isNesting = value != null;
-
-              if (value == null) {
-                value = readTerminal(in, peeked);
-              }
-
-              if (current instanceof JsonArray) {
-                ((JsonArray) current).add(value);
-              } else {
-                ((JsonObject) current).add(name, value);
-              }
-
-              if (isNesting) {
-                stack.addLast(current);
-                current = value;
-              }
-            }
-
-            // End current element
-            if (current instanceof JsonArray) {
-              in.endArray();
-            } else {
-              in.endObject();
-            }
-
-            if (stack.isEmpty()) {
-              return current;
-            } else {
-              // Continue with enclosing element
-              current = stack.removeLast();
-            }
-          }
-        }
-
-        @Override
-        public void write(JsonWriter out, JsonElement value) throws IOException {
-          if (value == null || value.isJsonNull()) {
-            out.nullValue();
-          } else if (value.isJsonPrimitive()) {
-            JsonPrimitive primitive = value.getAsJsonPrimitive();
-            if (primitive.isNumber()) {
-              out.value(primitive.getAsNumber());
-            } else if (primitive.isBoolean()) {
-              out.value(primitive.getAsBoolean());
-            } else {
-              out.value(primitive.getAsString());
-            }
-
-          } else if (value.isJsonArray()) {
-            out.beginArray();
-            for (JsonElement e : value.getAsJsonArray()) {
-              write(out, e);
-            }
-            out.endArray();
-
-          } else if (value.isJsonObject()) {
-            out.beginObject();
-            for (Map.Entry<String, JsonElement> e : value.getAsJsonObject().entrySet()) {
-              out.name(e.getKey());
-              write(out, e.getValue());
-            }
-            out.endObject();
-
-          } else {
-            throw new IllegalArgumentException("Couldn't write " + value.getClass());
-          }
-        }
-      };
-
+      newFactoryForMultipleTypes(
+          Calendar.class, GregorianCalendar.class, new CalendarTypeAdapter());
+  public static final TypeAdapterFactory LOCALE_FACTORY =
+      newFactory(Locale.class, new LocaleTypeAdapter());
+  public static final TypeAdapter<JsonElement> JSON_ELEMENT = new JsonElementTypeAdapter();
   public static final TypeAdapterFactory JSON_ELEMENT_FACTORY =
       newTypeHierarchyFactory(JsonElement.class, JSON_ELEMENT);
 

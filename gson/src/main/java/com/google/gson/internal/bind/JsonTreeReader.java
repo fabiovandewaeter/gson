@@ -276,7 +276,7 @@ public final class JsonTreeReader extends JsonReader {
     return result;
   }
 
-  JsonElement nextJsonElement() throws IOException {
+  public JsonElement nextJsonElement() throws IOException {
     final JsonToken peeked = peek();
     if (peeked == JsonToken.NAME
         || peeked == JsonToken.END_ARRAY

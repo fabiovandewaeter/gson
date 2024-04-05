@@ -7,26 +7,26 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.math.BigInteger;
 
-public class BigDecimalTypeAdapter extends TypeAdapter<BigDecimal> {
+public class BigIntegerTypeAdapter extends TypeAdapter<BigInteger> {
   @Override
-  public BigDecimal read(JsonReader in) throws IOException {
+  public BigInteger read(JsonReader in) throws IOException {
     if (in.peek() == JsonToken.NULL) {
       in.nextNull();
       return null;
     }
     String s = in.nextString();
     try {
-      return NumberLimits.parseBigDecimal(s);
+      return NumberLimits.parseBigInteger(s);
     } catch (NumberFormatException e) {
       throw new JsonSyntaxException(
-          "Failed parsing '" + s + "' as BigDecimal; at path " + in.getPreviousPath(), e);
+          "Failed parsing '" + s + "' as BigInteger; at path " + in.getPreviousPath(), e);
     }
   }
 
   @Override
-  public void write(JsonWriter out, BigDecimal value) throws IOException {
+  public void write(JsonWriter out, BigInteger value) throws IOException {
     out.value(value);
   }
 }
